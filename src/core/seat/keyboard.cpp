@@ -12,6 +12,7 @@
 #include "cursor.hpp"
 #include "touch.hpp"
 #include "input-manager.hpp"
+#include "input-method-relay.hpp"
 #include "wayfire/compositor-view.hpp"
 #include "wayfire/signal-definitions.hpp"
 
@@ -37,7 +38,8 @@ void wf::keyboard_t::setup_listeners()
         }
 
         seat->priv->set_keyboard(this);
-        if (!handle_keyboard_key(ev->keycode, ev->state) && (mode == input_event_processing_mode_t::FULL))
+        if (!handle_keyboard_key(ev->time_msec, ev->keycode,
+            ev->state) && (mode == input_event_processing_mode_t::FULL))
         {
             if (ev->state == WL_KEYBOARD_KEY_STATE_PRESSED)
             {
@@ -71,8 +73,12 @@ void wf::keyboard_t::setup_listeners()
         auto kbd  = static_cast<wlr_keyboard*>(data);
         auto seat = wf::get_core().get_current_seat();
 
-        wlr_seat_set_keyboard(seat, kbd);
-        wlr_seat_keyboard_send_modifiers(seat, &kbd->modifiers);
+        if (!wf::get_core_impl().im_relay->handle_modifier(kbd))
+        {
+            wlr_seat_set_keyboard(seat, kbd);
+            wlr_seat_keyboard_send_modifiers(seat, &kbd->modifiers);
+        }
+
         wlr_idle_notify_activity(wf::get_core().protocols.idle, seat);
     });
 
@@ -281,15 +287,15 @@ bool wf::keyboard_t::has_only_modifiers()
     return true;
 }
 
-bool wf::keyboard_t::handle_keyboard_key(uint32_t key, uint32_t state)
+bool wf::keyboard_t::handle_keyboard_key(uint32_t time, uint32_t key, uint32_t state)
 {
     using namespace std::chrono;
 
     auto& input = wf::get_core_impl().input;
     auto& seat  = wf::get_core_impl().seat;
 
-    bool handled_in_plugin = false;
-    auto mod = mod_from_key(key);
+    bool handled = false;
+    auto mod     = mod_from_key(key);
     input->locked_mods = this->get_locked_mods();
 
     if (state == WLR_KEY_PRESSED)
@@ -315,7 +321,7 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t key, uint32_t state)
             mod_binding_key = 0;
         }
 
-        handled_in_plugin |= wf::get_core().bindings->handle_key(
+        handled |= wf::get_core().bindings->handle_key(
             wf::keybinding_t{get_modifiers(), key}, mod_binding_key);
     } else
     {
@@ -328,7 +334,7 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t key, uint32_t state)
 
             if ((timeout <= 0) || (time_elapsed < milliseconds(timeout)))
             {
-                handled_in_plugin |= wf::get_core().bindings->handle_key(
+                handled |= wf::get_core().bindings->handle_key(
                     wf::keybinding_t{get_modifiers() | mod, 0}, mod_binding_key);
             }
         }
@@ -336,5 +342,10 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t key, uint32_t state)
         mod_binding_key = 0;
     }
 
-    return handled_in_plugin;
+    if (!handled)
+    {
+        handled |= wf::get_core_impl().im_relay->handle_key(handle, time, key, state);
+    }
+
+    return handled;
 }
