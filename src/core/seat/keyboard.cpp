@@ -294,8 +294,8 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t time, uint32_t key, uint32_t s
     auto& input = wf::get_core_impl().input;
     auto& seat  = wf::get_core_impl().seat;
 
-    bool handled_in_plugin = false;
-    auto mod = mod_from_key(key);
+    bool handled = false;
+    auto mod     = mod_from_key(key);
     input->locked_mods = this->get_locked_mods();
 
     if (state == WLR_KEY_PRESSED)
@@ -320,7 +320,7 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t time, uint32_t key, uint32_t s
             mod_binding_key = 0;
         }
 
-        handled_in_plugin |= wf::get_core().bindings->handle_key(
+        handled |= wf::get_core().bindings->handle_key(
             wf::keybinding_t{get_modifiers(), key}, mod_binding_key);
     } else
     {
@@ -333,7 +333,7 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t time, uint32_t key, uint32_t s
 
             if ((timeout <= 0) || (time_elapsed < milliseconds(timeout)))
             {
-                handled_in_plugin |= wf::get_core().bindings->handle_key(
+                handled |= wf::get_core().bindings->handle_key(
                     wf::keybinding_t{get_modifiers() | mod, 0}, mod_binding_key);
             }
         }
