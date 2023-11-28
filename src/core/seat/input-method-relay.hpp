@@ -37,6 +37,7 @@ class input_method_relay
         {
             set_focus(nullptr);
         }
+
         focus_just_changed = true;
     };
 
