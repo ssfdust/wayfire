@@ -439,8 +439,8 @@ wf::popup_surface::popup_surface(wf::input_method_relay *rel, wlr_input_popup_su
     on_unmap.set_callback([&] (void*) { unmap(); });
     on_commit.set_callback([&] (void*) { update_geometry(); });
 
-    on_map.connect(&surface->events.map);
-    on_unmap.connect(&surface->events.unmap);
+    on_map.connect(&surface->surface->events.map);
+    on_unmap.connect(&surface->surface->events.unmap);
     on_destroy.connect(&surface->events.destroy);
 }
 
@@ -524,15 +524,12 @@ void wf::popup_surface::update_geometry()
     auto g = toplevel->get_geometry();
     auto margins = toplevel->toplevel()->current().margins;
 
-    if (wlr_surface_is_xdg_surface(wlr_surface))
+    auto xdg_surface = wlr_xdg_surface_try_from_wlr_surface(wlr_surface);
+    if (xdg_surface)
     {
-        auto xdg_surface = wlr_xdg_surface_from_wlr_surface(wlr_surface);
-        if (xdg_surface)
-        {
-            // substract shadows etc; test app: d-feet
-            x -= xdg_surface->current.geometry.x;
-            y -= xdg_surface->current.geometry.y;
-        }
+        // substract shadows etc; test app: d-feet
+        x -= xdg_surface->current.geometry.x;
+        y -= xdg_surface->current.geometry.y;
     }
 
     damage();

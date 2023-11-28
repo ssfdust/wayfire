@@ -32,7 +32,7 @@ void wf::keyboard_t::setup_listeners()
 
         if (mode == input_event_processing_mode_t::IGNORE)
         {
-            wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat);
+            wlr_idle_notifier_v1_notify_activity(wf::get_core().protocols.idle_notifier, seat->seat);
             emit_device_post_event_signal(ev);
             return;
         }
@@ -64,7 +64,7 @@ void wf::keyboard_t::setup_listeners()
             }
         }
 
-        wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat);
+        wlr_idle_notifier_v1_notify_activity(wf::get_core().protocols.idle_notifier, seat->seat);
         emit_device_post_event_signal(ev);
     });
 
@@ -79,7 +79,7 @@ void wf::keyboard_t::setup_listeners()
             wlr_seat_keyboard_send_modifiers(seat, &kbd->modifiers);
         }
 
-        wlr_idle_notify_activity(wf::get_core().protocols.idle, seat);
+        wlr_idle_notifier_v1_notify_activity(wf::get_core().protocols.idle_notifier, seat);
     });
 
     on_key.connect(&handle->events.key);
@@ -300,8 +300,7 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t time, uint32_t key, uint32_t s
 
     if (state == WLR_KEY_PRESSED)
     {
-        auto session = wlr_backend_get_session(wf::get_core().backend);
-        if (check_vt_switch(session, key, get_modifiers()))
+        if (check_vt_switch(wf::get_core().session, key, get_modifiers()))
         {
             return true;
         }
