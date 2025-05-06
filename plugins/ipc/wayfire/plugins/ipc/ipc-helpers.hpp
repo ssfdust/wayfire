@@ -8,7 +8,7 @@
 #include <wayfire/core.hpp>
 #include <wayfire/output-layout.hpp>
 #include <wayfire/core.hpp>
-#include "ipc-method-repository.hpp"
+#include "wayfire/plugins/ipc/ipc-method-repository.hpp"
 
 namespace wf
 {

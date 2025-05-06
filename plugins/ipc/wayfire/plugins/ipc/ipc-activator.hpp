@@ -2,8 +2,8 @@
 
 #include <wayfire/bindings-repository.hpp>
 #include <wayfire/config/types.hpp>
-#include "ipc-helpers.hpp"
-#include "ipc-method-repository.hpp"
+#include "wayfire/plugins/ipc/ipc-helpers.hpp"
+#include "wayfire/plugins/ipc/ipc-method-repository.hpp"
 #include "wayfire/bindings.hpp"
 #include "wayfire/core.hpp"
 #include "wayfire/option-wrapper.hpp"
