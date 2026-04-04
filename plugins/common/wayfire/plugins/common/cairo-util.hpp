@@ -256,7 +256,7 @@ struct cairo_text_t
         x += xpad;
         y += ypad;
 
-        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        cairo_set_operator(cr, par.bg_rect ? CAIRO_OPERATOR_OVER : CAIRO_OPERATOR_SOURCE);
         cairo_move_to(cr, x - (float)extents.x / PANGO_SCALE, y);
         cairo_set_source_rgba(cr, par.text_color.r, par.text_color.g,
             par.text_color.b, par.text_color.a);
